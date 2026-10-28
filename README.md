@@ -1,93 +1,110 @@
-# Generador de Sonido Terapéutico para Tinnitus (Protocolo CSIC / Cobo et al.)
+# Tinnitune — Tinnitus Sound Generator (CSIC Protocol / Cobo et al.)
 
-Aplicación de escritorio en Python / PySide6 para la evaluación de pérdida auditiva, visualización de audiogramas clínicos y síntesis de estímulos sonoros personalizados (*Entorno Acústico Enriquecido - EAE*) según el protocolo de investigación de **María Cuesta, Christiam Garzón y Pedro Cobo** (CSIC, 2022 / *Brain Sciences*, 12, 82).
-
----
-
-## Características Principales
-
-1. **Ingreso y Edición de Audiometría Clínica:**
-   - Tabla con las 11 frecuencias estándar analizadas en el estudio: `125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000 y 8000 Hz`.
-   - Control independiente para Oído Izquierdo (L) y Oído Derecho (R) en decibelios ($-10$ a $110\text{ dB HL}$).
-   - Presets de carga rápida: *Normal (0 dB)*, *Caída en Agudos (Muesca típica en 4k)* y *Presbiacusia*.
-   - Guardado y carga de audiometrías en archivos JSON.
-
-2. **Audiograma Clínico Interactivo:**
-   - Visualización estandarizada internacional: Oído Derecho en **rojo** (`O`), Oído Izquierdo en **azul** (`X`).
-   - Eje Y invertido (mejores umbrales arriba, mayor hipoacusia abajo) y escala logarítmica de frecuencias.
-   - Interpolación espectral suave PCHIP en tiempo real.
-
-3. **Módulo de Evaluación y Calibración a 1000 Hz con Traspaso Automático:**
-   - **Calibración con audiometría previa:** Permite fijar el umbral clínico conocido en **1000 Hz** (anclaje universal) y ajustar el volumen digital donde apenas se percibe el tono con los auriculares en uso.
-   - **Compensación ISO 389-1 (RETSPL):** Modela la sensibilidad fisiológica del oído humano para convertir la atenuación digital en umbrales clínicos estimados en **dB HL**.
-   - **Traspaso Automático:** Con un solo clic, asigna el umbral calculado directamente a la tabla de audiometría, redibuja el gráfico y avanza a la siguiente frecuencia.
-
-4. **Motor DSP de Síntesis Terapéutica:**
-   - **Ruido de Banda Ancha Coloreado:** Ruido blanco filtrado estéreo con filtro FIR de fase lineal donde la ganancia responde a $G(f) = 10^{\frac{HL(f)}{20}}$.
-   - **Modos Secuenciales EAE:** Pulsos acústicos con ventanas *Tone-Burst*, *Tone-Pip* y *Gammatone*.
-   - Normalización de picos a $-1.0\text{ dBFS}$ y desvanecimientos suaves (*fade-in* y *fade-out* de 5 segundos).
-
-5. **Preescucha y Calibración del "Mixing Point":**
-   - Reproducción estéreo en tiempo real en bucle con control de volumen para que el paciente ajuste el nivel en sus auriculares justo por debajo de su acúfeno (*punto de mezcla* de Jastreboff).
-
-6. **Exportación para Teléfono Celular:**
-   - Exportación a **MP3 de 320 kbps** (ideal para reproducir en celulares Android e iOS) o **WAV sin compresión**.
-   - Opciones de duración: **60 minutos** (dosis diaria recomendada de 1 hora al día), 30 min, 15 min o 1 min (prueba).
-   - Generación en segundo plano (`QThread`) con barra de progreso y botón para abrir directamente la carpeta de destino.
+Desktop application written in Python / PySide6 for hearing loss evaluation, clinical audiogram visualization, and personalized acoustic therapy synthesis (**Enriched Acoustic Environment — EAE**), based on the peer-reviewed clinical research by **María Cuesta, Christiam Garzón, and Pedro Cobo** (CSIC, 2022 / *Brain Sciences*, 12, 82).
 
 ---
 
-## Guía de Uso: Calibración a 1000 Hz y Evaluación Audiométrica
+## Key Features
 
-Si cuentas con una audiometría clínica previa, puedes calibrar tus auriculares en la computadora y evaluar todas las demás frecuencias de forma precisa:
+1. **Clinical Audiometry Input & Management:**
+   * Grid input for the **11 standard clinical frequencies** analyzed in the study: `125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, and 8000 Hz`.
+   * Independent thresholds for **Left Ear (L)** and **Right Ear (R)** ranging from $-10\text{ dB}$ to $110\text{ dB HL}$.
+   * Quick-load presets: *Normal Hearing (0 dB)*, *High-Frequency Notch (Typical 4k loss)*, and *Presbycusis*.
+   * Save and load audiometric profiles in portable JSON files.
 
-```
+2. **Interactive Clinical Audiogram:**
+   * International clinical audiology standard: **Right Ear in red (`O`)**, **Left Ear in blue (`X`)**.
+   * Inverted Y-axis (better hearing thresholds at the top, hearing loss downwards) and logarithmic frequency X-axis.
+   * Real-time smooth PCHIP spectral interpolation.
+
+3. **1000 Hz Calibration & Automatic Threshold Transfer:**
+   * **Prior Audiometry Calibration:** Uses your known clinical threshold at **1000 Hz** (universal audiological anchor) to calibrate output volume on your specific computer and headphones.
+   * **ISO 389-1 (RETSPL) Compensation:** Automatically models the physiological sensitivity curve of the human ear, translating digital attenuation (down to $-100\text{ dBFS}$) into estimated clinical thresholds in **dB HL**.
+   * **Automatic Transfer:** A single click on *«📥 Transfer Value to Audiometry Table»* writes the calculated threshold directly to the table, redraws the chart, and auto-advances to the next frequency.
+
+4. **DSP Synthesis Engine (Therapeutic Sound):**
+   * **Colored Broadband Noise (Primary Study Stimulus):** Continuous stereo Gaussian noise shaped by a linear-phase FIR filter where the gain corresponds to $G(f) = 10^{\frac{\text{HL}(f)}{20}}$, selectively re-stimulating frequency areas affected by hearing loss.
+   * **Sequential EAE Modes (Cobo et al., 2021):** Discrete acoustic pulses using *Tone-Burst* (symmetrical Hann window for hyperacusis), *Tone-Pip* (asymmetrical window for tonotopic reorganization), and *Gammatone* auditory filters.
+   * Peak normalization at $-1.0\text{ dBFS}$ with smooth 5-second fade-ins and fade-outs to protect the ears.
+
+5. **Real-Time Prelistening & "Mixing Point" Calibration:**
+   * Continuous loop playback in headphones with master volume control to train patients on finding the **mixing point** (adjusting the sound level just below the perceived tinnitus loudness, as prescribed by Jastreboff's neurophysiological model).
+
+6. **Mobile-Ready Audio Export:**
+   * Direct export to high-fidelity **MP3 (320 kbps)** or uncompressed **WAV (16-bit PCM)**.
+   * Daily session lengths: **60 minutes** (standard clinical dose: 1 hour/day over 4 months), 30 min, 15 min, or 1 min (test).
+   * Background rendering (`QThread`) with progress bar and a button to open the destination folder directly.
+
+---
+
+## User Guide: 1000 Hz Calibration & Threshold Evaluation
+
+If you have a previous clinical audiogram, you can calibrate your headphones and estimate your hearing thresholds across all frequencies:
+
+```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│ 1. Calibración con Audiometría Previa (a 1000 Hz)                      │
-│    Oído: (•) Izquierdo (L)   ( ) Derecho (R)                          │
-│    Mi umbral clínico en 1000 Hz: [ 15 dB HL ]                          │
-│    Volumen 1000 Hz:  [═══════════●══════════] -65 dBFS                 │
-│    [ ▶ Probar 1000 Hz ]     [ ✓ Fijar Referencia (Apenas Oigo) ]      │
+│ 1. Calibration with Prior Audiometry (at 1000 Hz)                      │
+│    Ear: (•) Left (L)   ( ) Right (R)                                   │
+│    Known clinical threshold at 1000 Hz: [ 15 dB HL ]                   │
+│    1000 Hz Volume:  [═══════════●══════════] -65 dBFS                  │
+│    [ ▶ Test 1000 Hz ]        [ ✓ Set Reference (Barely Audible) ]     │
 └────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│ 2. Evaluación de Frecuencia y Asignación Automática                    │
-│    Frecuencia: [ 4000 Hz (4 kHz) ▼ ]    Oído: (•) Izq (L)  ( ) Der (R) │
-│    Intensidad: [════════════════●═══] -25 dBFS                         │
-│    Umbral Calculado (ISO 389): [  35 dB HL (LEFT)  ]                   │
+│ 2. Frequency Evaluation & Automatic Assignment                         │
+│    Frequency: [ 4000 Hz (4 kHz) ▼ ]       Ear: (•) Left  ( ) Right     │
+│    Test Level:  [════════════════●═══] -25 dBFS                        │
+│    Calculated Threshold (ISO 389): [  35 dB HL (LEFT)  ]               │
 │                                                                        │
-│    [ ▶ Escuchar Tono (1.5s) ]                                          │
-│    [ 📥 Pasar Valor a Tabla de Audiometría ]  ◄── (Actualiza y avanza) │
+│    [ ▶ Listen Tone (1.5s) ]                                            │
+│    [ 📥 Transfer Value to Audiometry Table ]  ◄── (Updates & advances) │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Paso 1: Calibrar el punto de referencia (1000 Hz)
-1. Selecciona el oído a calibrar (*Izquierdo* o *Derecho*).
-2. Ingresa en la casilla **«Mi umbral clínico a 1000 Hz»** el valor en dB HL que figura en tu estudio médico (ej. `15 dB HL`).
-3. Mueve el control de volumen de 1000 Hz y pulsa **«▶ Probar 1000 Hz»** hasta situarte en el volumen más bajo donde apenas comienzas a percibir el tono.
-4. Pulsa **«✓ Fijar Referencia (Apenas Oigo)»**. Esto establece la correspondencia exacta entre la tarjeta de sonido, tus auriculares y tu nivel auditivo real.
+### Step 1: Calibrate Reference Level (1000 Hz)
+1. Select the ear to calibrate (*Left* or *Right*).
+2. Enter the threshold from your medical report in **«Known clinical threshold at 1000 Hz»** (e.g., `15 dB HL`).
+3. Move the slider and click **«▶ Test 1000 Hz»** until you locate the lowest volume where you can *just barely perceive* the tone.
+4. Click **«✓ Set Reference (Barely Audible)»**. This anchors your soundcard and headphone sensitivity to your actual hearing level.
 
-### Paso 2: Evaluar frecuencias y traspasar valores
-1. Selecciona la frecuencia a medir (ej. 2000, 3000, 4000, 6000 Hz).
-2. Mueve el control deslizante y pulsa **«▶ Escuchar Tono»** para localizar tu umbral de escucha.
-3. Observa el valor en el recuadro **«Umbral Calculado (ISO 389)»** (calculado aplicando la corrección estándar de sensibilidad humana RETSPL).
-4. Haz clic en **«📥 Pasar Valor a Tabla de Audiometría»**:
-   - El valor en dB HL se escribe automáticamente en la tabla.
-   - El audiograma clínico superior se redibuja en el acto.
-   - El selector de frecuencia avanza automáticamente a la siguiente para agilizar la prueba.
+### Step 2: Evaluate Frequencies & Transfer
+1. Select the frequency to test (e.g., 2000, 3000, 4000, 6000 Hz).
+2. Adjust the test intensity and click **«▶ Listen Tone»** to find your hearing threshold.
+3. Observe the calculated value in **«Calculated Threshold (ISO 389)»** (computed with the RETSPL physiological curve).
+4. Click **«📥 Transfer Value to Audiometry Table»**:
+   * The value is automatically written into the table.
+   * The clinical audiogram chart updates immediately.
+   * The frequency selector automatically moves to the next frequency.
 
 ---
 
-## Cómo Ejecutar la Aplicación
+## Installation & Requirements
 
-Para iniciar la aplicación desde la terminal:
+Clone the repository and install the dependencies:
+
+```bash
+git clone https://github.com/gastonparis/Tinnitune.git
+cd Tinnitune
+pip install -r requirements.txt
+```
+
+### System Requirements
+* Python 3.10 or higher
+* `ffmpeg` (for high-quality MP3 encoding)
+* Libraries: `PySide6`, `numpy`, `scipy`, `matplotlib`, `soundfile`, `pydub`
+
+---
+
+## How to Run the Application
+
+Launch the application directly using the launcher script:
 
 ```bash
 ./run.sh
 ```
 
-O directamente con Python:
+Or via Python:
 
 ```bash
 python3 main.py
@@ -95,17 +112,24 @@ python3 main.py
 
 ---
 
-## Ejecución de Pruebas de Calidad
+## Quality Control & Automated Tests
 
-La aplicación incluye un conjunto completo de pruebas unitarias, espectrales (FFT) y de integración:
+The application includes unit, spectral (FFT), and end-to-end integration tests:
 
 ```bash
-# Pruebas del motor DSP (fase lineal, FFT, anti-clipping y exportador)
+# DSP Engine Tests (linear phase FIR, FFT spectral concordance, anti-clipping, exporter)
 python3 tests/test_dsp.py
 
-# Pruebas de integración de la interfaz y renderizado en segundo plano
+# End-to-End GUI & Background Worker Integration Tests
 python3 tests/test_integration.py
 
-# Pruebas de cálculo ISO 389 y traspaso de calibración
+# ISO 389-1 Calculation & Threshold Calibration Tests
 python3 tests/test_calibration.py
 ```
+
+---
+
+## Scientific Reference
+
+* Cuesta, M.; Garzón, C.; Cobo, P. *Efficacy of Sound Therapy for Tinnitus Using an Enriched Acoustic Environment with Hearing-Loss Matched Broadband Noise.* **Brain Sci. 2022, 12, 82.** https://doi.org/10.3390/brainsci12010082
+* Cobo, P.; Cuesta, M.; De la Colina, C. *Customised enriched acoustic environment for sound therapy of tinnitus.* **Acta Acustica 2021, 5, 34.** https://doi.org/10.1051/aacus/2021028
